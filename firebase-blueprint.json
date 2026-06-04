@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "Factory": {
+      "title": "Factory",
+      "description": "Represents a petroleum processing factory / distribution center.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The Arabic name of the factory"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this factory was registered"
+        }
+      },
+      "required": ["name", "createdAt"]
+    },
+    "ProductionData": {
+      "title": "ProductionData",
+      "description": "Represents the distribution and loading data for a given factory.",
+      "type": "object",
+      "properties": {
+        "allocated": {
+          "type": "number",
+          "description": "Allocated petroleum quantity in liters"
+        },
+        "carried": {
+          "type": "number",
+          "description": "Carried over (rolled-over) petroleum quantity in liters"
+        },
+        "days": {
+          "type": "object",
+          "description": "A map of day number (1-31) to quantity dispatched (liters)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the last modification"
+        }
+      },
+      "required": ["allocated", "carried", "days", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/factories/{factoryId}": {
+      "schema": "Factory",
+      "description": "Main list of factories managed in the system."
+    },
+    "/productionData/{factoryId}": {
+      "schema": "ProductionData",
+      "description": "Petroleum loading and quantities data for each factory."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "نظام إدارة تجهيز المنتجات النفطية",
+  "description": "منظومة إلكترونية متكاملة لإدارة الحصص المخصصة وتدوير كميات المنتجات النفطية للمعامل والمستودعات ومتابعة التجهيز اليومي وحساب السيارات المكافئة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

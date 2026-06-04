@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable, hardened security primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'a.h.s.f.f.k.a12@gmail.com'
+      );
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation functions for each entity
+    function isValidFactory(data) {
+      return data.keys().hasAll(['name', 'createdAt']) &&
+             data.keys().size() == 2 &&
+             data.name is string &&
+             data.name.size() > 0 &&
+             data.name.size() <= 200 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidProductionData(data) {
+      return data.keys().hasAll(['allocated', 'carried', 'days', 'updatedAt']) &&
+             data.keys().size() == 4 &&
+             data.allocated is number &&
+             data.allocated >= 0 &&
+             data.carried is number &&
+             data.carried >= 0 &&
+             data.days is map &&
+             data.updatedAt is timestamp;
+    }
+
+    // Matches for Factories collection
+    match /factories/{factoryId} {
+      allow read: if true; // Public access for analytics and reporting
+      allow create: if isAdmin() && isValidId(factoryId) && isValidFactory(incoming()) && incoming().createdAt == request.time;
+      allow update: if isAdmin() && isValidId(factoryId) && isValidFactory(incoming());
+      allow delete: if isAdmin() && isValidId(factoryId);
+    }
+
+    // Matches for ProductionData collection
+    match /productionData/{factoryId} {
+      allow read: if true; // Anyone can view loading logs
+      allow create: if isAdmin() && isValidId(factoryId) && isValidProductionData(incoming()) && incoming().updatedAt == request.time;
+      // Allow specific field modifications strictly by authorized admins
+      allow update: if isAdmin() &&
+                    isValidId(factoryId) &&
+                    isValidProductionData(incoming()) &&
+                    incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(factoryId);
+    }
+
+    // Admin self-lookup or configuration route
+    match /admins/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if false; // Provisioned out-of-band or via server only
+    }
+  }
+}
