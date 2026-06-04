@@ -21,7 +21,8 @@ import {
   addDoc, 
   deleteDoc,
   getDocFromServer,
-  onSnapshot
+  onSnapshot,
+  serverTimestamp
 } from 'firebase/firestore';
 import { Factory, ProductionData } from '../types';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -229,7 +230,7 @@ export async function createFactory(name: string): Promise<Factory> {
     try {
       await setDoc(doc(db, path, cleanId), {
         name,
-        createdAt: new Date() // Firestore server will translate, or let rules allow client time
+        createdAt: serverTimestamp()
       });
       
       // Also initialize empty production data
@@ -237,7 +238,7 @@ export async function createFactory(name: string): Promise<Factory> {
         allocated: 0,
         carried: 0,
         days: {},
-        updatedAt: new Date()
+        updatedAt: serverTimestamp()
       });
 
       return { id: cleanId, name, createdAt: now };
@@ -319,7 +320,7 @@ export async function saveProductionData(factoryId: string, data: Partial<Produc
         allocated: data.allocated ?? 0,
         carried: data.carried ?? 0,
         days: firestoreDays,
-        updatedAt: new Date() // Sets current timestamp to satisfy rule condition 'incoming().updatedAt == request.time'
+        updatedAt: serverTimestamp()
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
